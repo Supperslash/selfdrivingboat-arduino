@@ -42,39 +42,30 @@ const int LED = 2; // Could be different depending on the dev board. I used the 
 
 class HBridgeMaderController {
   private:
-    int pinArray[6] = {     // The pins used as output
+    int pinArray[4] = {     // The pins used as output
       13,                 // motor 1 pin A
       12,                 // motor 1 pin B
       14,                  // motor 2 pin A
       27,                 // motor 2 pin B
-      16, // EN1
-      17  // EN2
     };
-    int direction[5][6] = {
-      { 1, 0, 1, 0, 1, 1 },     // Forward =0
-      { 0, 1, 0, 1, 0, 0 },     // Backwords =1
-      { 0, 0, 0, 0, 0, 0 },     // Standby =2
-      { 1, 0, 0, 0, 0, 0 },     // turn left =3
-      { 0, 0, 1, 0, 0, 0 }      // Turn right = 4
+    int direction[5][4] = {
+      { 1, 0, 1, 0 },     // Forward =0
+      { 0, 1, 0, 1 },     // Backwords =1
+      { 0, 0, 0, 0 },     // Standby =2
+      { 1, 0, 0, 0 },     // turn left =3
+      { 0, 0, 1, 0 }      // Turn right = 4
     };
     int pinCount = 6;       // Pins uses in array
-    int speed = 100;    // for the pwm
+    int speed = 150;    // for the pwm
     
     
   public:
     HBridgeMaderController() {
-      for (int count = 0; count <= pinCount - 2; count++)
+      for (int count = 0; count <= pinCount; count++)
       {
-          pinMode(this->pinArray[count], OUTPUT);
+          ledcSetup(count, 5000, 8);
+          ledcAttachPin(this->pinArray[count], count);
       }
-      
-      ledcSetup(0, 5000, 8);
-      // attach the channel to the GPIO to be controlled
-      ledcAttachPin(this->pinArray[4], 0);
-
-      ledcSetup(1, 5000, 8);
-      // attach the channel to the GPIO to be controlled
-      ledcAttachPin(this->pinArray[5], 1);
     }
 
     void drive(int x) { // Driveing the pins off of the input of x.
@@ -83,28 +74,11 @@ class HBridgeMaderController {
         {
             if (this->direction[x][i] == 1)
             {
-                Serial.print("writing");
-                Serial.print(x);
-                Serial.print(i);
-                Serial.println(this->direction[x][i]);
-                if (i > 3) { // pwm
-                  Serial.print("writing pwm");
-                  Serial.println(this->speed);
-                  ledcWrite(0, this->speed);
-                  ledcWrite(1, this->speed);
-                }
-                else { // digital
-                  Serial.print("writing gpio");
-                  digitalWrite(this->pinArray[i], HIGH);  
-                }
+                ledcWrite(i, this->speed);
             }
             else
             {
-                Serial.print("writing");
-                Serial.print(x);
-                Serial.print(i);
-                Serial.println(this->direction[x][i]);
-                digitalWrite(this->pinArray[i], LOW);
+                ledcWrite(i, 0);
             }
         }
         Serial.println("outside drive");
