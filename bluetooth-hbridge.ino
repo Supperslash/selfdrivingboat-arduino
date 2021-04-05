@@ -114,23 +114,10 @@ class MyCallbacks: public BLECharacteristicCallbacks {
       std::string rxValue = pCharacteristic->getValue();
 
       if (rxValue.length() > 0) {
-        Serial.println("*********");
-        Serial.print("Received Value: ");
-        Serial.println(rxValue.length());
-        for (int i = 0; i < rxValue.length(); i++) {
-          Serial.print("-");
-          Serial.print(rxValue[i]);
-          Serial.print("-");
-          Serial.println();
-        }
-
-        Serial.println();
 
         if(rxValue.length() > 6){
 
             serial_state = rxValue[5]; // state is askii!
-            Serial.print("State is: ");
-            Serial.println(serial_state);
             
             switch(serial_state){
               case 49: state = 0; break;
@@ -141,19 +128,9 @@ class MyCallbacks: public BLECharacteristicCallbacks {
               default:
                 state = 2;
             }
-
-            Serial.println("switch succeded");
-            Serial.println(state);
             
             motor_controller.drive(state);
         }
-
-        Serial.println();
-
-        
-
-        Serial.println();
-        Serial.println("*********");
       }
     }
 };
