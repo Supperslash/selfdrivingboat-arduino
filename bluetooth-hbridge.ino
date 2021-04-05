@@ -39,6 +39,8 @@ const int LED = 2;
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
+int Pwr = 3;
+
 class HBridgeMaderController {
   private:
 
@@ -87,7 +89,6 @@ class HBridgeMaderController {
       191,
       255
     };
-    int Pwr = 3;
 
    
   public:
@@ -99,13 +100,17 @@ class HBridgeMaderController {
       }
     }
 
-    void drive(int x) { // Driveing the pins off of the input of x.
+    void drive(int x, int drive_pwr) { // Driveing the pins off of the input of x.
         Serial.println("inside drive");
         for (int i = 0; i < this->pinCount; i++)
         {
             if (this->direction[x][i] == 1)
             {
-                ledcWrite(i, this->power_settings[this->Pwr]);
+                Serial.print("PWM with power_settings:");
+                Serial.print(drive_pwr);
+                Serial.print(" ");
+                Serial.println(this->power_settings[drive_pwr]);
+                ledcWrite(i, this->power_settings[drive_pwr]);
             }
             else
             {
@@ -115,10 +120,7 @@ class HBridgeMaderController {
         Serial.println("outside drive");
     }
   
-    void set_pwr(int pwr) {
-      this->Pwr = pwr;
-    }
-  }
+   
 
 };
 
@@ -158,22 +160,35 @@ class MyCallbacks: public BLECharacteristicCallbacks {
       if (rxValue.length() > 6) {
 
         serial_state = rxValue[5]; // state is askii!
-        if (serial_state > 53) {
-          case 54:
-            motor_controller.set_pwr(3);
-          break;
-          case 55:
-            motor_controller.set_pwr(1);
-          break;
-          case 56:
-            motor_controller.set_pwr(2);
-          break;
-          case 57:
-            motor_controller.set_pwr(3);
-          break;
-          default:
-          motor_controller.set_pwr(3);
+        Serial.print("serial_state: ");
+        Serial.println(serial_state);
+
+        if(serial_state > 53){
+        switch (serial_state) {
+            case 54:
+              Serial.println("serial_state 1");
+              Pwr = 3;
+            break;
+            case 55:
+              Serial.println("serial_state 2");
+              Pwr = 1;
+            break;
+            case 56:
+              Serial.println("serial_state 3");
+              Pwr = 2;
+            break;
+            case 57:
+              Serial.println("serial_state 4");
+              Pwr = 3;
+            break;
+            default:
+            Serial.println("serial_state 5");
+            Pwr = 3;
+          }
         }
+
+        Serial.print("Pwr set to");
+        Serial.println(Pwr);
 
         switch (serial_state) {
         case 49:
@@ -198,7 +213,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         Serial.println("switch succeded");
         Serial.println(state);
 
-        motor_controller.drive(state);
+        motor_controller.drive(state, Pwr);
 
       }
 
@@ -285,3 +300,4 @@ void loop() {
   }
   delay(1000);
 }
+
