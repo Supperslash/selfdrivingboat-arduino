@@ -41,69 +41,82 @@ const int LED = 2;
 
 class HBridgeMaderController {
   private:
+
     int pinArray[4] = { // The pins used as output
       13, // motor 1 pin A
       12, // motor 1 pin B
       14, // motor 2 pin A
       27  // motor 2 pin B
     };
-  int direction[5][4] = {
-    {
-      1,
-      0,
-      1,
-      0
-    },    // Forward =0
-    {
-      0,
-      1,
-      0,
-      1
-    },    // Backwords =1
-    {
-      0,
-      0,
-      0,
-      0
-    },   // Standby =2
-    {
-      1,
-      0,
-      0,
-      0
-    },   // turn left =3
-    {
-      0,
-      0,
-      1,
-      0
-    }    // Turn right = 4
-  };
-  int pinCount = 4; // Pins uses in array
-  int power_settings[4] = {
-    63,
-    127,
-    191,
-    255
-  };
-  int Pwr = 3;
+    int direction[5][4] = {
+      {
+        1,
+        0,
+        1,
+        0
+      },    // Forward =0
+      {
+        0,
+        1,
+        0,
+        1
+      },    // Backwords =1
+      {
+        0,
+        0,
+        0,
+        0
+      },   // Standby =2
+      {
+        1,
+        0,
+        0,
+        0
+      },   // turn left =3
+      {
+        0,
+        0,
+        1,
+        0
+      }    // Turn right = 4
+    };
+    int pinCount = 4; // Pins uses in array
+    int power_settings[4] = {
+      63,
+      127,
+      191,
+      255
+    };
+    int Pwr = 3;
 
+   
   public:
     HBridgeMaderController() {
-      for (int count = 0; count <= pinCount; count++) {
-        pinMode(this -> pinArray[count], OUTPUT);
+      for (int count = 0; count <= pinCount; count++)
+      {
+          ledcSetup(count, 5000, 8);
+          ledcAttachPin(this->pinArray[count], count);
       }
     }
 
-  void drive(int x) { // Driveing the pins off of the input of x.
-    for (int i = 0; i < 4; i++) {
-      if (this -> direction[x][i] == 1) {
-        Serial.println(this -> direction[x][i]);
-        analoglWrite(this -> pinArray[i], this -> power_settings[Pwr]);
-      } else {
-        Serial.println(this -> direction[x][i]);
-        analogWrite(this -> pinArray[i], LOW);
-      }
+    void drive(int x) { // Driveing the pins off of the input of x.
+        Serial.println("inside drive");
+        for (int i = 0; i < this->pinCount; i++)
+        {
+            if (this->direction[x][i] == 1)
+            {
+                ledcWrite(i, this->power_settings[this->Pwr]);
+            }
+            else
+            {
+                ledcWrite(i, 0);
+            }
+        }
+        Serial.println("outside drive");
+    }
+  
+    void set_pwr(int pwr) {
+      this->Pwr = pwr;
     }
   }
 
@@ -125,6 +138,7 @@ int serial_state = 53;
 int state = 2;
 
 class MyCallbacks: public BLECharacteristicCallbacks {
+
   void onWrite(BLECharacteristic * pCharacteristic) {
     std::string rxValue = pCharacteristic -> getValue();
 
@@ -146,19 +160,19 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         serial_state = rxValue[5]; // state is askii!
         if (serial_state > 53) {
           case 54:
-            Pwr = 0;
+            motor_controller.set_pwr(3);
           break;
           case 55:
-            Pwr = 1;
+            motor_controller.set_pwr(1);
           break;
           case 56:
-            Pwr = 2;
+            motor_controller.set_pwr(2);
           break;
           case 57:
-            Pwr = 3;
+            motor_controller.set_pwr(3);
           break;
           default:
-          Pwr = 3;
+          motor_controller.set_pwr(3);
         }
 
         switch (serial_state) {
@@ -185,6 +199,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         Serial.println(state);
 
         motor_controller.drive(state);
+
       }
 
       Serial.println();
